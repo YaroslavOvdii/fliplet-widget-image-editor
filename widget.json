@@ -3,8 +3,8 @@
   "package": "com.fliplet.image-editor",
   "version": "1.0.0",
   "icon": "img/icon.png",
-  "tags": ["type:component", "category:general"],
-  "provider_only": false,
+  "tags": ["category:general"],
+  "provider_only": true,
   "providers": [
     "com.fliplet.file-manager",
     "com.fliplet.link"
