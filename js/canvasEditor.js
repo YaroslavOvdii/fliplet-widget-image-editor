@@ -152,7 +152,7 @@ CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
 
   var ratio = this.sourceCanvas.width / this.sourceCanvas.height;
   var width =  Math.round(this.MAX_CANVAS_HEIGHT * ratio);
-  var proportion = this.sourceCanvas.width / width;
+  var proportion = this.sourceCanvas.width / this.editorCanvas.clientWidth;
 
   this.resizeEditorCanvas(width, this.MAX_CANVAS_HEIGHT, function() {
     $(that.editorCanvas).parent().Jcrop({
