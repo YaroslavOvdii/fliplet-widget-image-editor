@@ -47,6 +47,14 @@
   max-height: 230px;
 }
 
+#image-editor-changes {
+  display: none;
+}
+
+.no-image {
+  display: none;
+}
+
 .dimensions {
   float: right;
   margin-bottom: 10px;

@@ -5,10 +5,13 @@ var SELECTOR = {
   IMAGE_EDITOR: '.image-editor',
   IMAGE_PREVIEWER_CANVAS_WRAPPER: '#preview-image-editor',
   IMAGE_EDITOR_MAIN: '.image-editor-main',
+  IMAGE_EDITOR_CHANGES: '#image-editor-changes',
   IMAGE_EDITOR_CROP: '.image-editor-crop',
   IMAGE_EDITOR_RESIZE: '.image-editor-resize',
   IMAGE_EDITOR_ROTATE: '.image-editor-rotate',
   BTN_EDIT_SAVE_CHANGES: '#saveEditChangesButton',
+  BTN_EDIT_CHANGES_APPLY: '#applyImageChanges',
+  BTN_EDIT_CHANGES_CANCEL: '#discardImageChanges',
   BTN_EDIT_CLOSE: '#closeEditButton',
   BTN_EDIT_CROP_SHOW: '#cropEditButton',
   BTN_EDIT_CROP_APPLY: '#applyCrop',
@@ -48,70 +51,7 @@ var EDITOR_MODE = {
 
 var canvasEditor;
 
-
-Fliplet.Widget.onSaveRequest(function () {
-  showLoader();
-  canvasEditor.sourceCanvas.toBlob(function(result) {
-    var formData = new FormData();
-    var fileName = data.image.name.replace(/\.[^/.]+$/, "");
-    formData.append("blob",result, fileName + '.jpeg');
-    Fliplet.Media.Files.upload({
-      data: formData
-    }).then(function (files) {
-      data.image = files[0];
-      if (data.image && data.image.size) {
-        data.image.width = data.image.size[0];
-        data.image.height = data.image.size[1];
-      }
-      Fliplet.Widget.save(data).then(function () {
-        Fliplet.Widget.complete();
-      });
-    })
-  }, 'image/jpeg');
-
-});
-
-// Temporary alerts for Beta
-$('#help_tip').on('click', function () {
-  alert("During beta, please use live chat and let us know what you need help with.");
-});
-
-// Events
-
-$(SELECTOR.BTN_EDIT_CROP_SHOW).on('click', showCrop);
-$(SELECTOR.BTN_EDIT_CROP_APPLY).on('click', applyCrop);
-$(SELECTOR.BTN_EDIT_CROP_CANCEL).on('click', closeCrop);
-
-$(SELECTOR.BTN_EDIT_RESIZE_SHOW).on('click', showResize);
-$(SELECTOR.BTN_EDIT_RESIZE_APPLY).on('click', applyResize);
-$(SELECTOR.BTN_EDIT_RESIZE_CANCEL).on('click', closeResize);
-
-$(SELECTOR.BTN_EDIT_ROTATE_SHOW).on('click', showRotate);
-$(SELECTOR.BTN_EDIT_ROTATE_APPLY).on('click', applyRotate);
-$(SELECTOR.BTN_EDIT_ROTATE_CANCEL).on('click', closeRotate);
-
-$(SELECTOR.BTN_EDIT_ROTATE_LEFT).on('click', canvasRotateLeft);
-$(SELECTOR.BTN_EDIT_ROTATE_RIGHT).on('click', canvasRotateRight);
-
-$(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).on('input', widthChangedWithoutFocusOut);
-$(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).on('input', heightChangedWithoutFocusOut);
-
-$(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).on('click', changeLockRatio);
-
-$(SELECTOR.SELECT_EDIT_ASPECT_RATIO).on('change', changeAspectRatio);
-
-$(SELECTOR.INPUT_EDIT_CROP_X).on('change paste keyup', updateCropMask);
-$(SELECTOR.INPUT_EDIT_CROP_Y).on('change paste keyup', updateCropMask);
-$(SELECTOR.INPUT_EDIT_CROP_W).on('change paste keyup', updateCropMask);
-$(SELECTOR.INPUT_EDIT_CROP_H).on('change paste keyup', updateCropMask);
-
-// Temporary alerts for Beta
-$('#help_tip').on('click', function () {
-  alert("During beta, please use live chat and let us know what you need help with.");
-});
-
 function init() {
-  Fliplet.Studio.emit('widget-rendered', {});
   if (data.image){
     $('.image-editor').show();
     $('.no-image').hide();
@@ -128,7 +68,47 @@ function init() {
       canvasEditor.appendEditorCanvas($(SELECTOR.IMAGE_PREVIEWER_CANVAS_WRAPPER));
       changeDimensions();
     });
+  } else {
+    $('.image-editor').hide();
+    $('.no-image').show();
   }
+  Fliplet.Studio.emit('widget-rendered', {});
+
+  attachObservers();
+}
+
+function attachObservers() {
+  Fliplet.Widget.onSaveRequest(applyChanges);
+
+  $(SELECTOR.BTN_EDIT_CHANGES_APPLY).on('click', applyChanges);
+  $(SELECTOR.BTN_EDIT_CHANGES_CANCEL).on('click', cancelChanges);
+
+  $(SELECTOR.BTN_EDIT_CROP_SHOW).on('click', showCrop);
+  $(SELECTOR.BTN_EDIT_CROP_APPLY).on('click', applyCrop);
+  $(SELECTOR.BTN_EDIT_CROP_CANCEL).on('click', closeCrop);
+
+  $(SELECTOR.BTN_EDIT_RESIZE_SHOW).on('click', showResize);
+  $(SELECTOR.BTN_EDIT_RESIZE_APPLY).on('click', applyResize);
+  $(SELECTOR.BTN_EDIT_RESIZE_CANCEL).on('click', closeResize);
+
+  $(SELECTOR.BTN_EDIT_ROTATE_SHOW).on('click', showRotate);
+  $(SELECTOR.BTN_EDIT_ROTATE_APPLY).on('click', applyRotate);
+  $(SELECTOR.BTN_EDIT_ROTATE_CANCEL).on('click', closeRotate);
+
+  $(SELECTOR.BTN_EDIT_ROTATE_LEFT).on('click', canvasRotateLeft);
+  $(SELECTOR.BTN_EDIT_ROTATE_RIGHT).on('click', canvasRotateRight);
+
+  $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).on('input', widthChangedWithoutFocusOut);
+  $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).on('input', heightChangedWithoutFocusOut);
+
+  $(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).on('click', changeLockRatio);
+
+  $(SELECTOR.SELECT_EDIT_ASPECT_RATIO).on('change', changeAspectRatio);
+
+  $(SELECTOR.INPUT_EDIT_CROP_X).on('change paste keyup', updateCropMask);
+  $(SELECTOR.INPUT_EDIT_CROP_Y).on('change paste keyup', updateCropMask);
+  $(SELECTOR.INPUT_EDIT_CROP_W).on('change paste keyup', updateCropMask);
+  $(SELECTOR.INPUT_EDIT_CROP_H).on('change paste keyup', updateCropMask);
 }
 
 function showLoader() {
@@ -141,10 +121,39 @@ function hideLoader() {
   $(canvasEditor.editorCanvas).show();
 }
 
+function applyChanges() {
+  showLoader();
+  canvasEditor.sourceCanvas.toBlob(function(result) {
+    var formData = new FormData();
+    var fileName = data.image.name.replace(/\.[^/.]+$/, "");
+    formData.append("blob",result, fileName + '.jpg');
+    Fliplet.Media.Files.upload({
+      data: formData
+    }).then(function (files) {
+      data.image = files[0];
+      if (data.image && data.image.size) {
+        data.image.width = data.image.size[0];
+        data.image.height = data.image.size[1];
+      }
+      Fliplet.Widget.save(data).then(function () {
+        if (Fliplet.Env.get('providerMode') === 'fixed') {
+          Fliplet.Widget.complete();
+        } else {
+          hideSaveButtons();
+        }
+      });
+    })
+  }, 'image/jpeg');
+}
 
-//Crop
+function cancelChanges() {
+  // TODO Discard changes and reset image
+  hideSaveButtons();
+}
+
+// Crop
 function showCrop() {
-  swithEditorMode(EDITOR_MODE.CROP);
+  switchEditorMode(EDITOR_MODE.CROP);
   canvasEditor.applyEditorCanvasChanges();
   canvasEditor.createCropMask(updateCropCoords);
   showCustomCropRatio();
@@ -169,6 +178,7 @@ function applyCrop() {
   var h = $(SELECTOR.INPUT_EDIT_CROP_H).val();
 
   canvasEditor.cropEditorCanvas(x, y, w, h, afterCropApply);
+  showSaveButtons();
   emitChanges();
 }
 
@@ -181,7 +191,7 @@ function afterCropApply() {
 function closeCrop() {
   canvasEditor.destroyCropMask($(SELECTOR.IMAGE_PREVIEWER_CANVAS_WRAPPER));
   canvasEditor.resetEditorCanvas();
-  swithEditorMode(EDITOR_MODE.MAIN);
+  switchEditorMode(EDITOR_MODE.MAIN);
 }
 
 function changeAspectRatio() {
@@ -225,11 +235,11 @@ function updateCropMask(){
   canvasEditor.updateCropMask(x, y, w, h);
 }
 
-//Resize
+// Resize
 function showResize() {
   $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(canvasEditor.sourceCanvas.width);
   $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(canvasEditor.sourceCanvas.height);
-  swithEditorMode(EDITOR_MODE.RESIZE);
+  switchEditorMode(EDITOR_MODE.RESIZE);
 }
 
 function applyResize() {
@@ -237,6 +247,7 @@ function applyResize() {
 
   changeDimensions();
   hideResize();
+  showSaveButtons();
   emitChanges();
 }
 
@@ -309,12 +320,12 @@ function closeResize() {
 }
 
 function hideResize(){
-  swithEditorMode(EDITOR_MODE.MAIN);
+  switchEditorMode(EDITOR_MODE.MAIN);
 }
 
-//Rotate
+// Rotate
 function showRotate() {
-  swithEditorMode(EDITOR_MODE.ROTATE);
+  switchEditorMode(EDITOR_MODE.ROTATE);
 }
 
 
@@ -323,6 +334,7 @@ function applyRotate() {
 
   changeDimensions();
   hideRotate();
+  showSaveButtons();
   emitChanges();
 }
 
@@ -332,7 +344,7 @@ function closeRotate() {
 }
 
 function hideRotate() {
-  swithEditorMode(EDITOR_MODE.MAIN);
+  switchEditorMode(EDITOR_MODE.MAIN);
 }
 
 function canvasRotateLeft() {
@@ -352,7 +364,7 @@ function changeDimensions(width, height) {
 }
 
 
-function swithEditorMode(mode) {
+function switchEditorMode(mode) {
   $(SELECTOR.IMAGE_EDITOR_MAIN).hide();
   $(SELECTOR.IMAGE_EDITOR_CROP).hide();
   $(SELECTOR.IMAGE_EDITOR_RESIZE).hide();
@@ -376,9 +388,21 @@ function swithEditorMode(mode) {
   $(selector).show();
 }
 
-//  Send selected items data to parent widget
+// Send selected items data to parent widget
 function emitChanges() {
   Fliplet.Widget.emit('widget-set-info');
+}
+
+function showSaveButtons() {
+  // TODO Remove `&& false` condition
+  if (Fliplet.Env.get('providerMode') === 'fixed' && false) {
+    return;
+  }
+  $(SELECTOR.IMAGE_EDITOR_CHANGES).show();
+}
+
+function hideSaveButtons() {
+  $(SELECTOR.IMAGE_EDITOR_CHANGES).hide();
 }
 
 init();

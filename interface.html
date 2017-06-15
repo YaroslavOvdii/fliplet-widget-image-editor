@@ -3,18 +3,22 @@
     <div id="preview-image-editor">
       <div id="loader">
         <div class="spinner-holder animated">
-          <div class="spinner-overlay">Loading...</div>
+          <div class="spinner-overlay"></div>
           <p>Loading...</p>
         </div>
       </div>
     </div>
     <div class="image-editor-main">
       <div class="dimensions"></div>
-      <div class="btn-group btn-group-justified">
+      <div class="form-group btn-group btn-group-justified">
         <div class="btn btn-default" id="cropEditButton"><i class="fa fa-crop"></i> Crop</div>
         <div class="btn btn-default" id="resizeEditButton"><i class="fa fa-expand"></i> Resize</div>
         <div class="btn btn-default" id="rotateEditButton"><i class="fa fa-rotate-right"></i> Rotate</div>
       </div>
+      <p id="image-editor-changes">
+        <button class="btn btn-primary" id="applyImageChanges"><i class="fa fa-check"></i> Apply changes</button>
+        <button class="btn btn-link" id="discardImageChanges"><i class="fa fa-remove"></i> Discard</button>
+      </p>
     </div>
 
     <div class="image-editor-crop">
@@ -140,7 +144,5 @@
       </div>
     </div>
   </div>
-  <div class="no-image">
-    No image provided
-  </div>
+  <div class="no-image">No image provided</div>
 </div>
