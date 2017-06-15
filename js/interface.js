@@ -26,14 +26,14 @@ var SELECTOR = {
   INPUT_EDIT_RESIZE_WIDTH: '#width',
   INPUT_EDIT_RESIZE_HEIGHT: '#height',
   INPUT_EDIT_RESIZE_LOCK_RATIO: '#lock-ratio',
-  DIV_EDIT_RESIZE_RATIO_DANGER: '.bg-danger',
+  DIV_EDIT_RESIZE_RATIO_DANGER: '#ratio-warning',
   DIV_EDIT_CORP_CONTAINER: '',
   INPUT_EDIT_CROP_X: '#crop_x',
   INPUT_EDIT_CROP_Y: '#crop_y',
   INPUT_EDIT_CROP_W: '#crop_w',
   INPUT_EDIT_CROP_H: '#crop_h',
   SELECT_EDIT_ASPECT_RATIO: '#aspectRatio',
-  DIV_PULL_RIGHT: '.pull-right',
+  DIV_DIMENSIONS: '.dimensions',
   DIV_EDIT_CROP_COORDS_FORM: '#coordsForm',
   LOADER: '#loader',
   EDIT_CANVAS_WRAPPER: '#editCanvasWrapper'
@@ -344,9 +344,9 @@ function canvasRotateRight() {
 }
 
 function changeDimensions(width, height) {
-  $(SELECTOR.DIV_PULL_RIGHT)
+  $(SELECTOR.DIV_DIMENSIONS)
   .empty();
-  $(SELECTOR.DIV_PULL_RIGHT)
+  $(SELECTOR.DIV_DIMENSIONS)
   .append((width ? width : canvasEditor.sourceCanvas.width) +
     'x' + (height ? height : canvasEditor.sourceCanvas.height));
 }
