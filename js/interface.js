@@ -344,11 +344,11 @@ function canvasRotateRight() {
 }
 
 function changeDimensions(width, height) {
-  $(SELECTOR.DIV_DIMENSIONS)
-  .empty();
-  $(SELECTOR.DIV_DIMENSIONS)
-  .append((width ? width : canvasEditor.sourceCanvas.width) +
-    ' &times; ' + (height ? height : canvasEditor.sourceCanvas.height));
+  var dimensions =
+    (width ? width : canvasEditor.sourceCanvas.width) +
+    ' &times; ' +
+    (height ? height : canvasEditor.sourceCanvas.height);
+  $(SELECTOR.DIV_DIMENSIONS).html(dimensions);
 }
 
 
