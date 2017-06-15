@@ -10,8 +10,8 @@ var SELECTOR = {
   IMAGE_EDITOR_RESIZE: '.image-editor-resize',
   IMAGE_EDITOR_ROTATE: '.image-editor-rotate',
   BTN_EDIT_SAVE_CHANGES: '#saveEditChangesButton',
-  BTN_EDIT_CHANGES_APPLY: '#applyImageChanges',
-  BTN_EDIT_CHANGES_CANCEL: '#discardImageChanges',
+  BTN_EDIT_CHANGES_SAVE: '#saveImageChanges',
+  BTN_EDIT_CHANGES_CANCEL: '#cancelImageChanges',
   BTN_EDIT_CLOSE: '#closeEditButton',
   BTN_EDIT_CROP_SHOW: '#cropEditButton',
   BTN_EDIT_CROP_APPLY: '#applyCrop',
@@ -52,6 +52,12 @@ var EDITOR_MODE = {
 var canvasEditor;
 
 function init() {
+  initialiseEditor();
+  Fliplet.Studio.emit('widget-rendered', {});
+  attachObservers();
+}
+
+function initialiseEditor() {
   if (data.image){
     $('.image-editor').show();
     $('.no-image').hide();
@@ -72,15 +78,12 @@ function init() {
     $('.image-editor').hide();
     $('.no-image').show();
   }
-  Fliplet.Studio.emit('widget-rendered', {});
-
-  attachObservers();
 }
 
 function attachObservers() {
-  Fliplet.Widget.onSaveRequest(applyChanges);
+  Fliplet.Widget.onSaveRequest(saveChanges);
 
-  $(SELECTOR.BTN_EDIT_CHANGES_APPLY).on('click', applyChanges);
+  $(SELECTOR.BTN_EDIT_CHANGES_SAVE).on('click', saveChanges);
   $(SELECTOR.BTN_EDIT_CHANGES_CANCEL).on('click', cancelChanges);
 
   $(SELECTOR.BTN_EDIT_CROP_SHOW).on('click', showCrop);
@@ -121,7 +124,7 @@ function hideLoader() {
   $(canvasEditor.editorCanvas).show();
 }
 
-function applyChanges() {
+function saveChanges() {
   showLoader();
   canvasEditor.sourceCanvas.toBlob(function(result) {
     var formData = new FormData();
@@ -140,6 +143,7 @@ function applyChanges() {
           Fliplet.Widget.complete();
         } else {
           hideSaveButtons();
+          hideLoader();
         }
       });
     })
@@ -147,7 +151,8 @@ function applyChanges() {
 }
 
 function cancelChanges() {
-  // TODO Discard changes and reset image
+  $(SELECTOR.EDIT_CANVAS_WRAPPER).remove();
+  initialiseEditor();
   hideSaveButtons();
 }
 
@@ -394,8 +399,7 @@ function emitChanges() {
 }
 
 function showSaveButtons() {
-  // TODO Remove `&& false` condition
-  if (Fliplet.Env.get('providerMode') === 'fixed' && false) {
+  if (Fliplet.Env.get('providerMode') === 'fixed') {
     return;
   }
   $(SELECTOR.IMAGE_EDITOR_CHANGES).show();
