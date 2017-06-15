@@ -348,7 +348,7 @@ function changeDimensions(width, height) {
   .empty();
   $(SELECTOR.DIV_DIMENSIONS)
   .append((width ? width : canvasEditor.sourceCanvas.width) +
-    'x' + (height ? height : canvasEditor.sourceCanvas.height));
+    ' &times; ' + (height ? height : canvasEditor.sourceCanvas.height));
 }
 
 
