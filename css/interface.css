@@ -71,6 +71,7 @@ html.provider-inline .image-widget-holder {
 }
 
 .image-editor {
+  overflow-x: hidden;
   display: none;
 }
 
