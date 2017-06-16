@@ -1,3 +1,5 @@
+document.documentElement.classList.add('provider-' + Fliplet.Env.get('providerMode'));
+
 var data = Fliplet.Widget.getData() || {};
 
 var SELECTOR = {
@@ -55,15 +57,16 @@ function init() {
   initialiseEditor();
   Fliplet.Studio.emit('widget-rendered', {});
   attachObservers();
+  Fliplet.Widget.autosize();
 }
 
 function initialiseEditor() {
-  if (data.image){
+  if (data.image) {
     $('.image-editor').show();
     $('.no-image').hide();
     canvasEditor = new CanvasEditor({
-      sourceCanvas : document.createElement("canvas"),
-      editorCanvas : document.createElement("canvas"),
+      sourceCanvas: document.createElement("canvas"),
+      editorCanvas: document.createElement("canvas"),
       image: data.image,
       isDev: window.location.hostname === 'localhost',
       beforeRenderCallback: showLoader,
@@ -74,9 +77,11 @@ function initialiseEditor() {
       canvasEditor.appendEditorCanvas($(SELECTOR.IMAGE_PREVIEWER_CANVAS_WRAPPER));
       changeDimensions();
     });
+    Fliplet.Widget.autosize();
   } else {
     $('.image-editor').hide();
     $('.no-image').show();
+    Fliplet.Widget.autosize();
   }
 }
 
@@ -122,6 +127,7 @@ function showLoader() {
 function hideLoader() {
   $(SELECTOR.LOADER).hide();
   $(canvasEditor.editorCanvas).show();
+  Fliplet.Widget.autosize();
 }
 
 function saveChanges() {
@@ -129,16 +135,16 @@ function saveChanges() {
   canvasEditor.sourceCanvas.toBlob(function(result) {
     var formData = new FormData();
     var fileName = data.image.name.replace(/\.[^/.]+$/, "");
-    formData.append("blob",result, fileName + '.jpg');
+    formData.append("blob", result, fileName + '.jpg');
     Fliplet.Media.Files.upload({
       data: formData
-    }).then(function (files) {
+    }).then(function(files) {
       data.image = files[0];
       if (data.image && data.image.size) {
         data.image.width = data.image.size[0];
         data.image.height = data.image.size[1];
       }
-      Fliplet.Widget.save(data).then(function () {
+      Fliplet.Widget.save(data).then(function() {
         if (Fliplet.Env.get('providerMode') === 'fixed') {
           Fliplet.Widget.complete();
         } else {
@@ -162,18 +168,21 @@ function showCrop() {
   canvasEditor.applyEditorCanvasChanges();
   canvasEditor.createCropMask(updateCropCoords);
   showCustomCropRatio();
+  Fliplet.Widget.autosize();
 }
 
 function showCustomCropRatio() {
   $(SELECTOR.SELECT_EDIT_ASPECT_RATIO).val('custom');
   $(SELECTOR.DIV_EDIT_CROP_COORDS_FORM).css('display', '');
+  Fliplet.Widget.autosize();
 }
 
-function updateCropCoords (coords, proportion) {
+function updateCropCoords(coords, proportion) {
   $(SELECTOR.INPUT_EDIT_CROP_X).val(Math.round(coords.x * proportion));
   $(SELECTOR.INPUT_EDIT_CROP_Y).val(Math.round(coords.y * proportion));
   $(SELECTOR.INPUT_EDIT_CROP_W).val(Math.round(coords.w * proportion));
   $(SELECTOR.INPUT_EDIT_CROP_H).val(Math.round(coords.h * proportion));
+  Fliplet.Widget.autosize();
 }
 
 function applyCrop() {
@@ -185,6 +194,7 @@ function applyCrop() {
   canvasEditor.cropEditorCanvas(x, y, w, h, afterCropApply);
   showSaveButtons();
   emitChanges();
+  Fliplet.Widget.autosize();
 }
 
 function afterCropApply() {
@@ -197,28 +207,35 @@ function closeCrop() {
   canvasEditor.destroyCropMask($(SELECTOR.IMAGE_PREVIEWER_CANVAS_WRAPPER));
   canvasEditor.resetEditorCanvas();
   switchEditorMode(EDITOR_MODE.MAIN);
+  Fliplet.Widget.autosize();
 }
 
 function changeAspectRatio() {
   var aspectRatio = $(SELECTOR.SELECT_EDIT_ASPECT_RATIO).val();
   var ratio;
-  switch(aspectRatio) {
-    case 'original': ratio =  canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
+  switch (aspectRatio) {
+    case 'original':
+      ratio = canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
       break;
-    case 'smaller': ratio = 4;
+    case 'smaller':
+      ratio = 4;
       break;
-    case 'medium': ratio = 16/9;
+    case 'medium':
+      ratio = 16 / 9;
       break;
-    case 'big': ratio = 4/3;
+    case 'big':
+      ratio = 4 / 3;
       break;
-    case 'square': ratio = 1;
+    case 'square':
+      ratio = 1;
       break;
     case 'custom':
-    default: ratio = 0;
+    default:
+      ratio = 0;
       break;
   }
 
-  if(aspectRatio !== 'custom'){
+  if (aspectRatio !== 'custom') {
     $(SELECTOR.DIV_EDIT_CROP_COORDS_FORM).css('display', 'none');
   } else {
     $(SELECTOR.DIV_EDIT_CROP_COORDS_FORM).css('display', '');
@@ -230,9 +247,9 @@ function changeAspectRatio() {
   });
 
   canvasEditor.resetCropMaskToDefault();
- }
+}
 
-function updateCropMask(){
+function updateCropMask() {
   var x = parseInt($(SELECTOR.INPUT_EDIT_CROP_X).val());
   var y = parseInt($(SELECTOR.INPUT_EDIT_CROP_Y).val());
   var w = parseInt($(SELECTOR.INPUT_EDIT_CROP_W).val());
@@ -245,6 +262,7 @@ function showResize() {
   $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(canvasEditor.sourceCanvas.width);
   $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(canvasEditor.sourceCanvas.height);
   switchEditorMode(EDITOR_MODE.RESIZE);
+  Fliplet.Widget.autosize();
 }
 
 function applyResize() {
@@ -254,6 +272,7 @@ function applyResize() {
   hideResize();
   showSaveButtons();
   emitChanges();
+  Fliplet.Widget.autosize();
 }
 
 function widthChanged() {
@@ -261,7 +280,7 @@ function widthChanged() {
   var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val());
   var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val());
   if ($(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).prop('checked')) {
-    height =  Math.round(width * ratio);
+    height = Math.round(width * ratio);
     if (height < 1) height = 1;
     $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(height);
   }
@@ -270,7 +289,7 @@ function widthChanged() {
 }
 
 function heightChanged() {
-  var ratio =  canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
+  var ratio = canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
   var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val());
   var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val());
   if ($(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).prop('checked')) {
@@ -285,7 +304,7 @@ function heightChanged() {
 var sizeChangedTimeout = null;
 
 function createSizeChangedTimeout(callback) {
-  if(sizeChangedTimeout) {
+  if (sizeChangedTimeout) {
     clearTimeout(sizeChangedTimeout);
     sizeChangedTimeout = null;
   }
@@ -296,7 +315,7 @@ function createSizeChangedTimeout(callback) {
 
 function widthChangedWithoutFocusOut(e) {
   var currentWidth = Math.round(+e.target.value) || canvasEditor.currentImage.width;
-  if(currentWidth !== Math.round(+e.target.value)) {
+  if (currentWidth !== Math.round(+e.target.value)) {
     $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(currentWidth);
   }
   createSizeChangedTimeout(widthChanged);
@@ -304,7 +323,7 @@ function widthChangedWithoutFocusOut(e) {
 
 function heightChangedWithoutFocusOut(e) {
   var currentHeight = Math.round(+e.target.value) || canvasEditor.currentImage.height;
-  if(currentHeight !== Math.round(+e.target.value)) {
+  if (currentHeight !== Math.round(+e.target.value)) {
     $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(currentHeight);
   }
   createSizeChangedTimeout(heightChanged);
@@ -322,15 +341,17 @@ function changeLockRatio() {
 function closeResize() {
   canvasEditor.resetEditorCanvas();
   hideResize();
+  Fliplet.Widget.autosize();
 }
 
-function hideResize(){
+function hideResize() {
   switchEditorMode(EDITOR_MODE.MAIN);
 }
 
 // Rotate
 function showRotate() {
   switchEditorMode(EDITOR_MODE.ROTATE);
+  Fliplet.Widget.autosize();
 }
 
 
@@ -341,11 +362,13 @@ function applyRotate() {
   hideRotate();
   showSaveButtons();
   emitChanges();
+  Fliplet.Widget.autosize();
 }
 
 function closeRotate() {
   canvasEditor.resetEditorCanvas();
   hideRotate();
+  Fliplet.Widget.autosize();
 }
 
 function hideRotate() {
