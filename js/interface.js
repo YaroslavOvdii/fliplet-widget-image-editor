@@ -261,6 +261,8 @@ function updateCropMask() {
 function showResize() {
   $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(canvasEditor.sourceCanvas.width);
   $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(canvasEditor.sourceCanvas.height);
+  $(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).prop('checked', true);
+  $(SELECTOR.DIV_EDIT_RESIZE_RATIO_DANGER).hide();
   switchEditorMode(EDITOR_MODE.RESIZE);
   Fliplet.Widget.autosize();
 }
@@ -336,6 +338,7 @@ function changeLockRatio() {
   } else {
     $(SELECTOR.DIV_EDIT_RESIZE_RATIO_DANGER).show();
   }
+  Fliplet.Widget.autosize();
 }
 
 function closeResize() {
