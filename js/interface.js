@@ -1,3 +1,5 @@
+document.documentElement.classList.add('provider-' + Fliplet.Env.get('providerMode'));
+
 var data = Fliplet.Widget.getData() || {};
 
 var SELECTOR = {
@@ -5,10 +7,13 @@ var SELECTOR = {
   IMAGE_EDITOR: '.image-editor',
   IMAGE_PREVIEWER_CANVAS_WRAPPER: '#preview-image-editor',
   IMAGE_EDITOR_MAIN: '.image-editor-main',
+  IMAGE_EDITOR_CHANGES: '#image-editor-changes',
   IMAGE_EDITOR_CROP: '.image-editor-crop',
   IMAGE_EDITOR_RESIZE: '.image-editor-resize',
   IMAGE_EDITOR_ROTATE: '.image-editor-rotate',
   BTN_EDIT_SAVE_CHANGES: '#saveEditChangesButton',
+  BTN_EDIT_CHANGES_SAVE: '#saveImageChanges',
+  BTN_EDIT_CHANGES_CANCEL: '#cancelImageChanges',
   BTN_EDIT_CLOSE: '#closeEditButton',
   BTN_EDIT_CROP_SHOW: '#cropEditButton',
   BTN_EDIT_CROP_APPLY: '#applyCrop',
@@ -26,14 +31,14 @@ var SELECTOR = {
   INPUT_EDIT_RESIZE_WIDTH: '#width',
   INPUT_EDIT_RESIZE_HEIGHT: '#height',
   INPUT_EDIT_RESIZE_LOCK_RATIO: '#lock-ratio',
-  DIV_EDIT_RESIZE_RATIO_DANGER: '.bg-danger',
+  DIV_EDIT_RESIZE_RATIO_DANGER: '#ratio-warning',
   DIV_EDIT_CORP_CONTAINER: '',
   INPUT_EDIT_CROP_X: '#crop_x',
   INPUT_EDIT_CROP_Y: '#crop_y',
   INPUT_EDIT_CROP_W: '#crop_w',
   INPUT_EDIT_CROP_H: '#crop_h',
   SELECT_EDIT_ASPECT_RATIO: '#aspectRatio',
-  DIV_PULL_RIGHT: '.pull-right',
+  DIV_DIMENSIONS: '.dimensions',
   DIV_EDIT_CROP_COORDS_FORM: '#coordsForm',
   LOADER: '#loader',
   EDIT_CANVAS_WRAPPER: '#editCanvasWrapper'
@@ -48,76 +53,20 @@ var EDITOR_MODE = {
 
 var canvasEditor;
 
-
-Fliplet.Widget.onSaveRequest(function () {
-  showLoader();
-  canvasEditor.sourceCanvas.toBlob(function(result) {
-    var formData = new FormData();
-    var fileName = data.image.name.replace(/\.[^/.]+$/, "");
-    formData.append("blob",result, fileName + '.jpeg');
-    Fliplet.Media.Files.upload({
-      data: formData
-    }).then(function (files) {
-      data.image = files[0];
-      if (data.image && data.image.size) {
-        data.image.width = data.image.size[0];
-        data.image.height = data.image.size[1];
-      }
-      Fliplet.Widget.save(data).then(function () {
-        Fliplet.Widget.complete();
-      });
-    })
-  }, 'image/jpeg');
-
-});
-
-// Temporary alerts for Beta
-$('#help_tip').on('click', function () {
-  alert("During beta, please use live chat and let us know what you need help with.");
-});
-
-// Events
-
-$(SELECTOR.BTN_EDIT_CROP_SHOW).on('click', showCrop);
-$(SELECTOR.BTN_EDIT_CROP_APPLY).on('click', applyCrop);
-$(SELECTOR.BTN_EDIT_CROP_CANCEL).on('click', closeCrop);
-
-$(SELECTOR.BTN_EDIT_RESIZE_SHOW).on('click', showResize);
-$(SELECTOR.BTN_EDIT_RESIZE_APPLY).on('click', applyResize);
-$(SELECTOR.BTN_EDIT_RESIZE_CANCEL).on('click', closeResize);
-
-$(SELECTOR.BTN_EDIT_ROTATE_SHOW).on('click', showRotate);
-$(SELECTOR.BTN_EDIT_ROTATE_APPLY).on('click', applyRotate);
-$(SELECTOR.BTN_EDIT_ROTATE_CANCEL).on('click', closeRotate);
-
-$(SELECTOR.BTN_EDIT_ROTATE_LEFT).on('click', canvasRotateLeft);
-$(SELECTOR.BTN_EDIT_ROTATE_RIGHT).on('click', canvasRotateRight);
-
-$(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).on('input', widthChangedWithoutFocusOut);
-$(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).on('input', heightChangedWithoutFocusOut);
-
-$(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).on('click', changeLockRatio);
-
-$(SELECTOR.SELECT_EDIT_ASPECT_RATIO).on('change', changeAspectRatio);
-
-$(SELECTOR.INPUT_EDIT_CROP_X).on('change paste keyup', updateCropMask);
-$(SELECTOR.INPUT_EDIT_CROP_Y).on('change paste keyup', updateCropMask);
-$(SELECTOR.INPUT_EDIT_CROP_W).on('change paste keyup', updateCropMask);
-$(SELECTOR.INPUT_EDIT_CROP_H).on('change paste keyup', updateCropMask);
-
-// Temporary alerts for Beta
-$('#help_tip').on('click', function () {
-  alert("During beta, please use live chat and let us know what you need help with.");
-});
-
 function init() {
+  initialiseEditor();
   Fliplet.Studio.emit('widget-rendered', {});
-  if (data.image){
+  attachObservers();
+  Fliplet.Widget.autosize();
+}
+
+function initialiseEditor() {
+  if (data.image) {
     $('.image-editor').show();
     $('.no-image').hide();
     canvasEditor = new CanvasEditor({
-      sourceCanvas : document.createElement("canvas"),
-      editorCanvas : document.createElement("canvas"),
+      sourceCanvas: document.createElement("canvas"),
+      editorCanvas: document.createElement("canvas"),
       image: data.image,
       isDev: window.location.hostname === 'localhost',
       beforeRenderCallback: showLoader,
@@ -128,7 +77,46 @@ function init() {
       canvasEditor.appendEditorCanvas($(SELECTOR.IMAGE_PREVIEWER_CANVAS_WRAPPER));
       changeDimensions();
     });
+    Fliplet.Widget.autosize();
+  } else {
+    $('.image-editor').hide();
+    $('.no-image').show();
+    Fliplet.Widget.autosize();
   }
+}
+
+function attachObservers() {
+  Fliplet.Widget.onSaveRequest(saveChanges);
+
+  $(SELECTOR.BTN_EDIT_CHANGES_SAVE).on('click', saveChanges);
+  $(SELECTOR.BTN_EDIT_CHANGES_CANCEL).on('click', cancelChanges);
+
+  $(SELECTOR.BTN_EDIT_CROP_SHOW).on('click', showCrop);
+  $(SELECTOR.BTN_EDIT_CROP_APPLY).on('click', applyCrop);
+  $(SELECTOR.BTN_EDIT_CROP_CANCEL).on('click', closeCrop);
+
+  $(SELECTOR.BTN_EDIT_RESIZE_SHOW).on('click', showResize);
+  $(SELECTOR.BTN_EDIT_RESIZE_APPLY).on('click', applyResize);
+  $(SELECTOR.BTN_EDIT_RESIZE_CANCEL).on('click', closeResize);
+
+  $(SELECTOR.BTN_EDIT_ROTATE_SHOW).on('click', showRotate);
+  $(SELECTOR.BTN_EDIT_ROTATE_APPLY).on('click', applyRotate);
+  $(SELECTOR.BTN_EDIT_ROTATE_CANCEL).on('click', closeRotate);
+
+  $(SELECTOR.BTN_EDIT_ROTATE_LEFT).on('click', canvasRotateLeft);
+  $(SELECTOR.BTN_EDIT_ROTATE_RIGHT).on('click', canvasRotateRight);
+
+  $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).on('input', widthChangedWithoutFocusOut);
+  $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).on('input', heightChangedWithoutFocusOut);
+
+  $(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).on('click', changeLockRatio);
+
+  $(SELECTOR.SELECT_EDIT_ASPECT_RATIO).on('change', changeAspectRatio);
+
+  $(SELECTOR.INPUT_EDIT_CROP_X).on('change paste keyup', updateCropMask);
+  $(SELECTOR.INPUT_EDIT_CROP_Y).on('change paste keyup', updateCropMask);
+  $(SELECTOR.INPUT_EDIT_CROP_W).on('change paste keyup', updateCropMask);
+  $(SELECTOR.INPUT_EDIT_CROP_H).on('change paste keyup', updateCropMask);
 }
 
 function showLoader() {
@@ -139,27 +127,62 @@ function showLoader() {
 function hideLoader() {
   $(SELECTOR.LOADER).hide();
   $(canvasEditor.editorCanvas).show();
+  Fliplet.Widget.autosize();
 }
 
+function saveChanges() {
+  showLoader();
+  canvasEditor.sourceCanvas.toBlob(function(result) {
+    var formData = new FormData();
+    var fileName = data.image.name.replace(/\.[^/.]+$/, "");
+    formData.append("blob", result, fileName + '.jpg');
+    Fliplet.Media.Files.upload({
+      data: formData
+    }).then(function(files) {
+      data.image = files[0];
+      if (data.image && data.image.size) {
+        data.image.width = data.image.size[0];
+        data.image.height = data.image.size[1];
+      }
+      Fliplet.Widget.save(data).then(function() {
+        if (Fliplet.Env.get('providerMode') === 'fixed') {
+          Fliplet.Widget.complete();
+        } else {
+          hideSaveButtons();
+          hideLoader();
+        }
+      });
+    })
+  }, 'image/jpeg');
+}
 
-//Crop
+function cancelChanges() {
+  $(SELECTOR.EDIT_CANVAS_WRAPPER).remove();
+  initialiseEditor();
+  hideSaveButtons();
+}
+
+// Crop
 function showCrop() {
-  swithEditorMode(EDITOR_MODE.CROP);
+  switchEditorMode(EDITOR_MODE.CROP);
   canvasEditor.applyEditorCanvasChanges();
   canvasEditor.createCropMask(updateCropCoords);
   showCustomCropRatio();
+  Fliplet.Widget.autosize();
 }
 
 function showCustomCropRatio() {
   $(SELECTOR.SELECT_EDIT_ASPECT_RATIO).val('custom');
   $(SELECTOR.DIV_EDIT_CROP_COORDS_FORM).css('display', '');
+  Fliplet.Widget.autosize();
 }
 
-function updateCropCoords (coords, proportion) {
+function updateCropCoords(coords, proportion) {
   $(SELECTOR.INPUT_EDIT_CROP_X).val(Math.round(coords.x * proportion));
   $(SELECTOR.INPUT_EDIT_CROP_Y).val(Math.round(coords.y * proportion));
   $(SELECTOR.INPUT_EDIT_CROP_W).val(Math.round(coords.w * proportion));
   $(SELECTOR.INPUT_EDIT_CROP_H).val(Math.round(coords.h * proportion));
+  Fliplet.Widget.autosize();
 }
 
 function applyCrop() {
@@ -169,7 +192,9 @@ function applyCrop() {
   var h = $(SELECTOR.INPUT_EDIT_CROP_H).val();
 
   canvasEditor.cropEditorCanvas(x, y, w, h, afterCropApply);
+  showSaveButtons();
   emitChanges();
+  Fliplet.Widget.autosize();
 }
 
 function afterCropApply() {
@@ -181,29 +206,36 @@ function afterCropApply() {
 function closeCrop() {
   canvasEditor.destroyCropMask($(SELECTOR.IMAGE_PREVIEWER_CANVAS_WRAPPER));
   canvasEditor.resetEditorCanvas();
-  swithEditorMode(EDITOR_MODE.MAIN);
+  switchEditorMode(EDITOR_MODE.MAIN);
+  Fliplet.Widget.autosize();
 }
 
 function changeAspectRatio() {
   var aspectRatio = $(SELECTOR.SELECT_EDIT_ASPECT_RATIO).val();
   var ratio;
-  switch(aspectRatio) {
-    case 'original': ratio =  canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
+  switch (aspectRatio) {
+    case 'original':
+      ratio = canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
       break;
-    case 'smaller': ratio = 4;
+    case 'smaller':
+      ratio = 4;
       break;
-    case 'medium': ratio = 16/9;
+    case 'medium':
+      ratio = 16 / 9;
       break;
-    case 'big': ratio = 4/3;
+    case 'big':
+      ratio = 4 / 3;
       break;
-    case 'square': ratio = 1;
+    case 'square':
+      ratio = 1;
       break;
     case 'custom':
-    default: ratio = 0;
+    default:
+      ratio = 0;
       break;
   }
 
-  if(aspectRatio !== 'custom'){
+  if (aspectRatio !== 'custom') {
     $(SELECTOR.DIV_EDIT_CROP_COORDS_FORM).css('display', 'none');
   } else {
     $(SELECTOR.DIV_EDIT_CROP_COORDS_FORM).css('display', '');
@@ -215,9 +247,9 @@ function changeAspectRatio() {
   });
 
   canvasEditor.resetCropMaskToDefault();
- }
+}
 
-function updateCropMask(){
+function updateCropMask() {
   var x = parseInt($(SELECTOR.INPUT_EDIT_CROP_X).val());
   var y = parseInt($(SELECTOR.INPUT_EDIT_CROP_Y).val());
   var w = parseInt($(SELECTOR.INPUT_EDIT_CROP_W).val());
@@ -225,11 +257,12 @@ function updateCropMask(){
   canvasEditor.updateCropMask(x, y, w, h);
 }
 
-//Resize
+// Resize
 function showResize() {
   $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(canvasEditor.sourceCanvas.width);
   $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(canvasEditor.sourceCanvas.height);
-  swithEditorMode(EDITOR_MODE.RESIZE);
+  switchEditorMode(EDITOR_MODE.RESIZE);
+  Fliplet.Widget.autosize();
 }
 
 function applyResize() {
@@ -237,7 +270,9 @@ function applyResize() {
 
   changeDimensions();
   hideResize();
+  showSaveButtons();
   emitChanges();
+  Fliplet.Widget.autosize();
 }
 
 function widthChanged() {
@@ -245,7 +280,7 @@ function widthChanged() {
   var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val());
   var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val());
   if ($(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).prop('checked')) {
-    height =  Math.round(width * ratio);
+    height = Math.round(width * ratio);
     if (height < 1) height = 1;
     $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(height);
   }
@@ -254,7 +289,7 @@ function widthChanged() {
 }
 
 function heightChanged() {
-  var ratio =  canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
+  var ratio = canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
   var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val());
   var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val());
   if ($(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).prop('checked')) {
@@ -269,7 +304,7 @@ function heightChanged() {
 var sizeChangedTimeout = null;
 
 function createSizeChangedTimeout(callback) {
-  if(sizeChangedTimeout) {
+  if (sizeChangedTimeout) {
     clearTimeout(sizeChangedTimeout);
     sizeChangedTimeout = null;
   }
@@ -280,7 +315,7 @@ function createSizeChangedTimeout(callback) {
 
 function widthChangedWithoutFocusOut(e) {
   var currentWidth = Math.round(+e.target.value) || canvasEditor.currentImage.width;
-  if(currentWidth !== Math.round(+e.target.value)) {
+  if (currentWidth !== Math.round(+e.target.value)) {
     $(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(currentWidth);
   }
   createSizeChangedTimeout(widthChanged);
@@ -288,7 +323,7 @@ function widthChangedWithoutFocusOut(e) {
 
 function heightChangedWithoutFocusOut(e) {
   var currentHeight = Math.round(+e.target.value) || canvasEditor.currentImage.height;
-  if(currentHeight !== Math.round(+e.target.value)) {
+  if (currentHeight !== Math.round(+e.target.value)) {
     $(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(currentHeight);
   }
   createSizeChangedTimeout(heightChanged);
@@ -306,15 +341,17 @@ function changeLockRatio() {
 function closeResize() {
   canvasEditor.resetEditorCanvas();
   hideResize();
+  Fliplet.Widget.autosize();
 }
 
-function hideResize(){
-  swithEditorMode(EDITOR_MODE.MAIN);
+function hideResize() {
+  switchEditorMode(EDITOR_MODE.MAIN);
 }
 
-//Rotate
+// Rotate
 function showRotate() {
-  swithEditorMode(EDITOR_MODE.ROTATE);
+  switchEditorMode(EDITOR_MODE.ROTATE);
+  Fliplet.Widget.autosize();
 }
 
 
@@ -323,16 +360,19 @@ function applyRotate() {
 
   changeDimensions();
   hideRotate();
+  showSaveButtons();
   emitChanges();
+  Fliplet.Widget.autosize();
 }
 
 function closeRotate() {
   canvasEditor.resetEditorCanvas();
   hideRotate();
+  Fliplet.Widget.autosize();
 }
 
 function hideRotate() {
-  swithEditorMode(EDITOR_MODE.MAIN);
+  switchEditorMode(EDITOR_MODE.MAIN);
 }
 
 function canvasRotateLeft() {
@@ -344,15 +384,15 @@ function canvasRotateRight() {
 }
 
 function changeDimensions(width, height) {
-  $(SELECTOR.DIV_PULL_RIGHT)
-  .empty();
-  $(SELECTOR.DIV_PULL_RIGHT)
-  .append((width ? width : canvasEditor.sourceCanvas.width) +
-    'x' + (height ? height : canvasEditor.sourceCanvas.height));
+  var dimensions =
+    (width ? width : canvasEditor.sourceCanvas.width) +
+    ' &times; ' +
+    (height ? height : canvasEditor.sourceCanvas.height);
+  $(SELECTOR.DIV_DIMENSIONS).html(dimensions);
 }
 
 
-function swithEditorMode(mode) {
+function switchEditorMode(mode) {
   $(SELECTOR.IMAGE_EDITOR_MAIN).hide();
   $(SELECTOR.IMAGE_EDITOR_CROP).hide();
   $(SELECTOR.IMAGE_EDITOR_RESIZE).hide();
@@ -376,9 +416,20 @@ function swithEditorMode(mode) {
   $(selector).show();
 }
 
-//  Send selected items data to parent widget
+// Send selected items data to parent widget
 function emitChanges() {
   Fliplet.Widget.emit('widget-set-info');
+}
+
+function showSaveButtons() {
+  if (Fliplet.Env.get('providerMode') === 'fixed') {
+    return;
+  }
+  $(SELECTOR.IMAGE_EDITOR_CHANGES).show();
+}
+
+function hideSaveButtons() {
+  $(SELECTOR.IMAGE_EDITOR_CHANGES).hide();
 }
 
 init();
