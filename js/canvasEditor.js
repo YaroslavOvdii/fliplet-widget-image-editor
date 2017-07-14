@@ -25,8 +25,9 @@ CanvasEditor.prototype.init = function(callback){
   });
 };
 
-CanvasEditor.prototype.loadImageFromUrl = function(imgUrl, callback){
+CanvasEditor.prototype.loadImageFromUrl = function(imgUrl, callback) {
   //add local dev
+  var _this = this;
   var img = new Image;
   var src = imgUrl + (this.isDev ? '?_=' + Date.now() : ''); // insert image url here
 
@@ -35,6 +36,12 @@ CanvasEditor.prototype.loadImageFromUrl = function(imgUrl, callback){
   img.onload = function() {
     callback(null, img);
   };
+
+  img.onerror = function(error) {
+    if (Raven) {
+      Raven.captureException(error, { user: Fliplet.User.get('id'), mediaFile: _this.originalImage });
+    }
+  }
 
   img.src = src;
 
