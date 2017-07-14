@@ -37,9 +37,9 @@ CanvasEditor.prototype.loadImageFromUrl = function(imgUrl, callback) {
     callback(null, img);
   };
 
-  img.onerror = function(error) {
+  img.onerror = function() {
     if (Raven) {
-      Raven.captureException(error, { user: Fliplet.User.get('id'), mediaFile: _this.originalImage });
+      Raven.captureMessage('Error loading image', { user: Fliplet.User.get('id'), mediaFile: _this.originalImage });
     }
   }
 
