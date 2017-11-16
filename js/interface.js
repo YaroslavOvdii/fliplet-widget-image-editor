@@ -51,6 +51,14 @@ var EDITOR_MODE = {
   ROTATE: 'rotate'
 };
 
+var EXTENSION_MIME_MAP = {
+  'jpg': 'image/jpeg',
+  'png': 'image/png',
+  'jpeg': 'image/jpeg',
+  'gif': 'image/gif',
+  'tiff': 'image/tiff'
+}
+
 var canvasEditor;
 
 function init() {
@@ -132,10 +140,14 @@ function hideLoader() {
 
 function saveChanges() {
   showLoader();
+  var extension = data.image.ext;
+  var mimeType = EXTENSION_MIME_MAP[extension];
+
   canvasEditor.sourceCanvas.toBlob(function(result) {
     var formData = new FormData();
     var fileName = data.image.name.replace(/\.[^/.]+$/, "");
-    formData.append("blob", result, fileName + '.jpg');
+    
+    formData.append("blob", result, fileName + '.' + extension);
     Fliplet.Media.Files.upload({
       data: formData
     }).then(function(files) {
@@ -153,7 +165,7 @@ function saveChanges() {
         }
       });
     })
-  }, 'image/jpeg');
+  }, mimeType);
 }
 
 function cancelChanges() {
