@@ -140,15 +140,14 @@ function hideLoader() {
 
 function saveChanges() {
   showLoader();
-  var extension = EXTENSION_MIME_MAP.hasOwnProperty(data.image.ext.toLowerCase()) ?
-    data.image.ext :
-    'png';
+  var extension = EXTENSION_MIME_MAP.hasOwnProperty(data.image.ext.toLowerCase())
+    ? data.image.ext
+    : 'png';
   var mimeType = EXTENSION_MIME_MAP[extension];
 
   canvasEditor.sourceCanvas.toBlob(function(result) {
     var formData = new FormData();
     var fileName = data.image.name.replace(/\.[^/.]+$/, "");
-    
     formData.append("blob", result, fileName + '.' + extension);
     Fliplet.Media.Files.upload({
       data: formData
