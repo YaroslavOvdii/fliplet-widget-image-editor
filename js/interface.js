@@ -178,10 +178,14 @@ function cancelChanges() {
 // Crop
 function showCrop() {
   switchEditorMode(EDITOR_MODE.CROP);
-  canvasEditor.applyEditorCanvasChanges();
-  canvasEditor.createCropMask(updateCropCoords);
-  showCustomCropRatio();
   Fliplet.Widget.autosize();
+  // Wait for autosize to do it's job
+  // Prevents bad calculation of the canvas
+  setTimeout(function() {
+    canvasEditor.applyEditorCanvasChanges();
+    canvasEditor.createCropMask(updateCropCoords);
+    showCustomCropRatio();
+  }, 100);
 }
 
 function showCustomCropRatio() {
