@@ -154,6 +154,21 @@ CanvasEditor.prototype.cropEditorCanvas = function(x, y, w, h, callback) {
   this.cropCanvas(this.editorCanvas, x, y, w, h, callback);
 };
 
+CanvasEditor.prototype.notInBorders = function(coords, mousePos) {
+  var $container = $(this.editorCanvas).parent();
+  var containerSize = {
+    height: $container.innerHeight(),
+    width: $container.innerWidth()
+  };
+  var mouseX = mousePos.pageX - $container.offset().left;
+  var mouseY = mousePos.pageY - $container.offset().top;
+
+  return ((coords.x === 0 && mouseX < 0) || 
+       (coords.y === 0 &&  mouseY < 0) || 
+       (coords.x2 === containerSize.width && mouseX > containerSize.width) || 
+       (mouseY > containerSize.height && coords.y2 === containerSize.height))
+}
+
 CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
   var that = this;
 
@@ -173,6 +188,10 @@ CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
         if (!that.isCoordsEquel(coords, that.lastCropCoordindates)) {
           updateCropCoords(coords, proportion);
           lastCropCoordindates = coords;
+        }
+
+        if (that.notInBorders(coords, event)) {
+          $(event.target).trigger('mouseup');
         }
       },
       onRelease: function () {
