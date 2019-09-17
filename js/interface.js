@@ -140,8 +140,9 @@ function hideLoader() {
 
 function saveChanges() {
   showLoader();
-  var extension = EXTENSION_MIME_MAP.hasOwnProperty(data.image.ext.toLowerCase())
-    ? data.image.ext
+  var imageExt = data.image.hasOwnProperty('ext') ? data.image.ext.toLowerCase() : '';
+  var extension = EXTENSION_MIME_MAP.hasOwnProperty(imageExt)
+    ? imageExt
     : 'png';
   var mimeType = EXTENSION_MIME_MAP[extension];
 
