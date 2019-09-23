@@ -163,10 +163,10 @@ CanvasEditor.prototype.notInBorders = function(coords, mousePos) {
   var mouseX = mousePos.pageX - $container.offset().left;
   var mouseY = mousePos.pageY - $container.offset().top;
 
-  return ((coords.x === 0 && mouseX < 0) || 
-       (coords.y === 0 &&  mouseY < 0) || 
-       (coords.x2 === containerSize.width && mouseX > containerSize.width) || 
-       (mouseY > containerSize.height && coords.y2 === containerSize.height))
+  return (coords.x === 0 && mouseX < 0)
+    ||  (coords.y === 0 &&  mouseY < 0)
+    ||  (coords.x2 === containerSize.width && mouseX > containerSize.width)
+    ||  (mouseY > containerSize.height && coords.y2 === containerSize.height);
 }
 
 CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
