@@ -163,7 +163,9 @@ function saveChanges() {
           Fliplet.Widget.complete();
         } else {
           hideSaveButtons();
-          hideLoader();
+          setTimeout(function(){
+            hideLoader();            
+          }, 0);
         }
       });
     })
