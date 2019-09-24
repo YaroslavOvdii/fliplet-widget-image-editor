@@ -143,7 +143,7 @@ CanvasEditor.prototype.cropCanvas = function (canvas, x, y, w, h, callback) {
     var context = canvas.getContext('2d');
     canvas.width = w;
     canvas.height = h;
-    context.drawImage(image, x, y, w, h, 0, 0, w, h);
+    context.drawImage(image, x, y, w, h);
     callback();
     that.afterRenderCallback();
   });
