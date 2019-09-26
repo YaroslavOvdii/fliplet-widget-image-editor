@@ -19,6 +19,7 @@
       "vendor/hermite/hermite.min.js",
       "vendor/load-image/load-image.all.min.js",
       "vendor/jscrop/jcrop.min.js",
+      "vendor/to-blob.msedge-polyfill.js",
       "js/canvasEditor.js",
       "js/interface.js",
       "vendor/jscrop/jcrop.min.css",
