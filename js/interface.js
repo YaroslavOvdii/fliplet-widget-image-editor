@@ -146,7 +146,7 @@ function saveChanges() {
     : 'png';
   var mimeType = EXTENSION_MIME_MAP[extension];
 
-  canvasEditor.sourceCanvas.toBlob(function(result) {
+  canvasEditor.trimCanvas(canvasEditor.sourceCanvas).toBlob(function(result) {
     var formData = new FormData();
     var fileName = data.image.name.replace(/\.[^/.]+$/, "");
     formData.append("blob", result, fileName + '.' + extension);
