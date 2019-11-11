@@ -155,6 +155,10 @@ CanvasEditor.prototype.cropEditorCanvas = function(x, y, w, h, callback) {
 };
 
 CanvasEditor.prototype.notInBorders = function(coords, mousePos) {
+  if (!mousePos) {
+    return false;
+  }
+  
   var $container = $(this.editorCanvas).parent();
   var containerSize = {
     height: $container.innerHeight(),
