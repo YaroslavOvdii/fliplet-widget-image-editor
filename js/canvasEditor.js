@@ -72,7 +72,7 @@ CanvasEditor.prototype.drawImage = function(canvas, img){
 
 CanvasEditor.prototype.drawCanvas = function(sourceCanvas, destinationCanvas) {
   var destinationContext = destinationCanvas.getContext('2d');
-  destinationCanvas.width =  sourceCanvas.width;
+  destinationCanvas.width = sourceCanvas.width;
   destinationCanvas.height = sourceCanvas.height;
   destinationContext.drawImage(sourceCanvas, 0, 0);
 };
@@ -93,7 +93,7 @@ CanvasEditor.prototype.resizeCanvas = function(canvas, width, height, callback) 
   if (width < 1) width = 1;
   if (height < 1) height = 1;
   this.beforeRenderCallback();
-  this.HERMITE.resample(canvas, width, height, true, function() {
+  this.HERMITE.resample(this.trimCanvas(canvas), width, height, true, function() {
     that.afterRenderCallback();
     callback()
   });
@@ -143,10 +143,68 @@ CanvasEditor.prototype.cropCanvas = function (canvas, x, y, w, h, callback) {
     var context = canvas.getContext('2d');
     canvas.width = w;
     canvas.height = h;
-    context.drawImage(image, x, y, w, h);
+    context.drawImage(image, x, y, w, h, 0, 0, w, h);
     callback();
     that.afterRenderCallback();
   });
+};
+
+CanvasEditor.prototype.trimCanvas = function (canvas) {
+  var ctx = canvas.getContext('2d'),
+        copy = document.createElement('canvas').getContext('2d'),
+        pixels = ctx.getImageData(0, 0, canvas.width, canvas.height),
+        l = pixels.data.length,
+        i,
+        bound = {
+            top: null,
+            left: null,
+            right: null,
+            bottom: null
+        },
+        x, y;
+    
+    // Iterate over every pixel to find the highest
+    // and where it ends on every axis ()
+    for (i = 0; i < l; i += 4) {
+        if (pixels.data[i + 3] !== 0) {
+            x = (i / 4) % canvas.width;
+            y = Math.floor((i / 4) / canvas.width);
+
+            if (bound.top === null) {
+                bound.top = y;
+            }
+
+            if (bound.left === null) {
+                bound.left = x;
+            } else if (x < bound.left) {
+                bound.left = x;
+            }
+
+            if (bound.right === null) {
+                bound.right = x;
+            } else if (bound.right < x) {
+                bound.right = x;
+            }
+
+            if (bound.bottom === null) {
+                bound.bottom = y;
+            } else if (bound.bottom < y) {
+                bound.bottom = y;
+            }
+        }
+    }
+    
+    // Calculate the height and width of the content
+    var trimHeight = bound.bottom - bound.top,
+        trimWidth = bound.right - bound.left,
+        trimmed = ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+
+    copy.canvas.width = trimWidth;
+    copy.canvas.height = trimHeight;
+    copy.putImageData(trimmed, 0, 0);
+
+    // Return trimmed canvas
+    return copy.canvas;
 };
 
 CanvasEditor.prototype.cropEditorCanvas = function(x, y, w, h, callback) {
