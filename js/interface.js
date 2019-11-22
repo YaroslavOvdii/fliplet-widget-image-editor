@@ -421,15 +421,19 @@ function switchEditorMode(mode) {
   switch (mode) {
     case EDITOR_MODE.CROP:
       selector = SELECTOR.IMAGE_EDITOR_CROP;
+      canvasEditor.currentMode = 'crop'
       break;
     case EDITOR_MODE.RESIZE:
       selector = SELECTOR.IMAGE_EDITOR_RESIZE;
+      canvasEditor.currentMode = 'resize'
       break;
     case EDITOR_MODE.ROTATE:
       selector = SELECTOR.IMAGE_EDITOR_ROTATE;
+      canvasEditor.currentMode = 'rotate'
       break;
     default:
       selector = SELECTOR.IMAGE_EDITOR_MAIN;
+      canvasEditor.currentMode = 'main'
   }
 
   $(selector).show();

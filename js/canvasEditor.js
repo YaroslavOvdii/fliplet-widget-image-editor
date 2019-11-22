@@ -8,6 +8,7 @@ var CanvasEditor = function(config){
   this.lastCropCoordindates;
   this.MAX_CANVAS_HEIGHT = 250;
   this.CROP_MASK_IDENTATION = 15;
+  this.currentMode = 'main';
   this.beforeRenderCallback = config.beforeRenderCallback || function(){};
   this.afterRenderCallback = config.afterRenderCallback || function(){};
 };
@@ -89,11 +90,15 @@ CanvasEditor.prototype.applyEditorCanvasChanges = function() {
 
 CanvasEditor.prototype.resizeCanvas = function(canvas, width, height, callback) {
   var that = this;
+  var canvasObject = this.currentMode === 'crop' ? this.trimCanvas(canvas) : canvas;
+
   callback = callback || function(){};
+
   if (width < 1) width = 1;
   if (height < 1) height = 1;
+  
   this.beforeRenderCallback();
-  this.HERMITE.resample(this.trimCanvas(canvas), width, height, true, function() {
+  this.HERMITE.resample(canvasObject, width, height, true, function() {
     that.afterRenderCallback();
     callback()
   });
