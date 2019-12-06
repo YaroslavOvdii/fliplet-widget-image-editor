@@ -139,6 +139,7 @@ function hideLoader() {
 }
 
 function saveChanges() {
+  Fliplet.Widget.toggleSaveButton(false);
   showLoader();
   var imageExt = data.image.hasOwnProperty('ext') ? data.image.ext.toLowerCase() : '';
   var extension = EXTENSION_MIME_MAP.hasOwnProperty(imageExt)
@@ -162,6 +163,7 @@ function saveChanges() {
         if (Fliplet.Env.get('providerMode') === 'fixed') {
           Fliplet.Widget.complete();
         } else {
+          Fliplet.Widget.toggleSaveButton(true);
           hideSaveButtons();
           setTimeout(function(){
             hideLoader();            
