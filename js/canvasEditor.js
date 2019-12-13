@@ -1,3 +1,14 @@
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  if (typeof Raven !== 'undefined') {
+    Raven.captureMessage('Error loading image:  ' + msg + '. At line: ' + lineNo + '. In the file: ' + url, {
+      user: Fliplet.User.get('id'),
+      mediaFile: _this.originalImage,
+      errorObject: error
+    });
+  }
+  return false;
+}
+
 var CanvasEditor = function(config){
   this.sourceCanvas = config.sourceCanvas;
   this.editorCanvas = config.editorCanvas;
@@ -37,12 +48,6 @@ CanvasEditor.prototype.loadImageFromUrl = function(imgUrl, callback) {
   img.onload = function() {
     callback(null, img);
   };
-
-  img.onerror = function() {
-    if (typeof Raven !== 'undefined') {
-      Raven.captureMessage('Error loading image', { user: Fliplet.User.get('id'), mediaFile: _this.originalImage });
-    }
-  }
 
   img.src = src;
 
