@@ -151,7 +151,7 @@ html.provider-inline .image-widget-holder {
 .editCanvasWrapper canvas {
   margin: auto;
   max-height: 250px !important;
-  max-width: 100%;
+  max-width: 94vw;
   vertical-align: middle;
 }
 
