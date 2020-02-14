@@ -57,7 +57,7 @@ var EXTENSION_MIME_MAP = {
   'jpeg': 'image/jpeg',
   'gif': 'image/gif',
   'tiff': 'image/tiff'
-}
+};
 
 var canvasEditor;
 
@@ -73,8 +73,8 @@ function initialiseEditor() {
     $('.image-editor').show();
     $('.no-image').hide();
     canvasEditor = new CanvasEditor({
-      sourceCanvas: document.createElement("canvas"),
-      editorCanvas: document.createElement("canvas"),
+      sourceCanvas: document.createElement('canvas'),
+      editorCanvas: document.createElement('canvas'),
       image: data.image,
       isDev: window.location.hostname === 'localhost',
       beforeRenderCallback: showLoader,
@@ -149,8 +149,8 @@ function saveChanges() {
 
   canvasEditor.trimCanvas(canvasEditor.sourceCanvas).toBlob(function(result) {
     var formData = new FormData();
-    var fileName = data.image.name.replace(/\.[^/.]+$/, "");
-    formData.append("blob", result, fileName + '.' + extension);
+    var fileName = data.image.name.replace(/\.[^/.]+$/, '');
+    formData.append('blob', result, fileName + '.' + extension);
     Fliplet.Media.Files.upload({
       data: formData
     }).then(function(files) {
@@ -165,12 +165,12 @@ function saveChanges() {
         } else {
           Fliplet.Widget.toggleSaveButton(true);
           hideSaveButtons();
-          setTimeout(function(){
-            hideLoader();            
+          setTimeout(function() {
+            hideLoader();
           }, 0);
         }
       });
-    })
+    });
   }, mimeType);
 }
 
@@ -186,7 +186,6 @@ function showCrop() {
   canvasEditor.applyEditorCanvasChanges();
   canvasEditor.createCropMask(updateCropCoords);
   showCustomCropRatio();
-
 }
 
 function showCustomCropRatio() {
@@ -268,10 +267,10 @@ function changeAspectRatio() {
 }
 
 function updateCropMask() {
-  var x = parseInt($(SELECTOR.INPUT_EDIT_CROP_X).val());
-  var y = parseInt($(SELECTOR.INPUT_EDIT_CROP_Y).val());
-  var w = parseInt($(SELECTOR.INPUT_EDIT_CROP_W).val());
-  var h = parseInt($(SELECTOR.INPUT_EDIT_CROP_H).val());
+  var x = parseInt($(SELECTOR.INPUT_EDIT_CROP_X).val(), 10);
+  var y = parseInt($(SELECTOR.INPUT_EDIT_CROP_Y).val(), 10);
+  var w = parseInt($(SELECTOR.INPUT_EDIT_CROP_W).val(), 10);
+  var h = parseInt($(SELECTOR.INPUT_EDIT_CROP_H).val(), 10);
   canvasEditor.updateCropMask(x, y, w, h);
 }
 
@@ -297,8 +296,8 @@ function applyResize() {
 
 function widthChanged() {
   var ratio = canvasEditor.editorCanvas.height / canvasEditor.editorCanvas.width;
-  var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val());
-  var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val());
+  var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(), 10);
+  var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(), 10);
   if ($(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).prop('checked')) {
     height = Math.round(width * ratio);
     if (height < 1) height = 1;
@@ -310,8 +309,8 @@ function widthChanged() {
 
 function heightChanged() {
   var ratio = canvasEditor.editorCanvas.width / canvasEditor.editorCanvas.height;
-  var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val());
-  var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val());
+  var width = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_WIDTH).val(), 10);
+  var height = parseInt($(SELECTOR.INPUT_EDIT_RESIZE_HEIGHT).val(), 10);
   if ($(SELECTOR.INPUT_EDIT_RESIZE_LOCK_RATIO).prop('checked')) {
     width = Math.round(height * ratio);
     if (width < 1) width = 1;
@@ -329,7 +328,7 @@ function createSizeChangedTimeout(callback) {
     sizeChangedTimeout = null;
   }
   sizeChangedTimeout = setTimeout(function() {
-    callback()
+    callback();
   }, 350);
 }
 
@@ -423,19 +422,19 @@ function switchEditorMode(mode) {
   switch (mode) {
     case EDITOR_MODE.CROP:
       selector = SELECTOR.IMAGE_EDITOR_CROP;
-      canvasEditor.currentMode = 'crop'
+      canvasEditor.currentMode = 'crop';
       break;
     case EDITOR_MODE.RESIZE:
       selector = SELECTOR.IMAGE_EDITOR_RESIZE;
-      canvasEditor.currentMode = 'resize'
+      canvasEditor.currentMode = 'resize';
       break;
     case EDITOR_MODE.ROTATE:
       selector = SELECTOR.IMAGE_EDITOR_ROTATE;
-      canvasEditor.currentMode = 'rotate'
+      canvasEditor.currentMode = 'rotate';
       break;
     default:
       selector = SELECTOR.IMAGE_EDITOR_MAIN;
-      canvasEditor.currentMode = 'main'
+      canvasEditor.currentMode = 'main';
   }
 
   $(selector).show();

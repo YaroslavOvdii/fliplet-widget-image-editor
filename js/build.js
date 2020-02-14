@@ -1,17 +1,16 @@
-Fliplet.Widget.instance('image', function (data) {
-
-  $.fn.fadeInImg = function(img){
-    return $(this).each(function(){
+Fliplet.Widget.instance('image', function(data) {
+  $.fn.fadeInImg = function(img) {
+    return $(this).each(function() {
       var $placeholder = $(this);
       $placeholder.replaceWith(img);
-      setTimeout(function(){
+      setTimeout(function() {
         img.classList.add('lazy-loaded');
-        setTimeout(function(){
+        setTimeout(function() {
           img.classList.remove('lazy-placeholder');
         }, 0);
       }, 0);
     });
-  }
+  };
 
   var canvas = this;
   var imageUrl = data.image && data.image.url;
@@ -28,16 +27,16 @@ Fliplet.Widget.instance('image', function (data) {
   img.height = canvas.height;
   img.dataset.imageId = canvas.dataset.imageId;
   var $img = $(img);
-  $img.on('load', function(){
+  $img.on('load', function() {
     $placeholder.fadeInImg(this);
-  }).on('error', function(){
+  }).on('error', function() {
     $placeholder.fadeInImg(this);
   }).attr('src', imageUrl);
 
   if (!data.action) {
     return;
   }
-  $img.on('click', function (event) {
+  $img.on('click', function(event) {
     event.preventDefault();
     Fliplet.Navigate.to(data.action);
   });

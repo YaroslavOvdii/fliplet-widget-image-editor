@@ -1,0 +1,8 @@
+{
+  "extends": "fliplet",
+  "globals": {
+    "Hermite_class": true,
+    "Raven": true,
+    "CanvasEditor": true
+  }
+}

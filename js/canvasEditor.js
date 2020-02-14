@@ -1,4 +1,4 @@
-var CanvasEditor = function(config){
+var CanvasEditor = function(config) {
   this.sourceCanvas = config.sourceCanvas;
   this.editorCanvas = config.editorCanvas;
   this.originalImage = config.image;
@@ -9,15 +9,15 @@ var CanvasEditor = function(config){
   this.MAX_CANVAS_HEIGHT = 250;
   this.CROP_MASK_IDENTATION = 15;
   this.currentMode = 'main';
-  this.beforeRenderCallback = config.beforeRenderCallback || function(){};
-  this.afterRenderCallback = config.afterRenderCallback || function(){};
+  this.beforeRenderCallback = config.beforeRenderCallback || function() {};
+  this.afterRenderCallback = config.afterRenderCallback || function() {};
 };
 
 
-CanvasEditor.prototype.init = function(callback){
+CanvasEditor.prototype.init = function(callback) {
   var that = this;
   this.beforeRenderCallback();
-  this.loadImageFromUrl(this.originalImage.url, function (err, image){
+  this.loadImageFromUrl(this.originalImage.url, function(err, image) {
     that.currentImage = image;
     that.drawImage(that.sourceCanvas, image);
     that.drawImage(that.editorCanvas, image);
@@ -27,12 +27,12 @@ CanvasEditor.prototype.init = function(callback){
 };
 
 CanvasEditor.prototype.loadImageFromUrl = function(imgUrl, callback) {
-  //add local dev
+  // add local dev
   var _this = this;
-  var img = new Image;
+  var img = new Image();
   var src = imgUrl + (this.isDev ? '?_=' + Date.now() : ''); // insert image url here
 
-  img.crossOrigin = "Anonymous";
+  img.crossOrigin = 'Anonymous';
 
   img.onload = function() {
     callback(null, img);
@@ -42,20 +42,20 @@ CanvasEditor.prototype.loadImageFromUrl = function(imgUrl, callback) {
     if (typeof Raven !== 'undefined') {
       Raven.captureMessage('Error loading image', { user: Fliplet.User.get('id'), mediaFile: _this.originalImage });
     }
-  }
+  };
 
   img.src = src;
 
-// make sure the load event fires for cached images too
+  // make sure the load event fires for cached images too
   if ( img.complete || img.complete === undefined ) {
-    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
     img.src = src;
   }
 };
 
-CanvasEditor.prototype.loadImageFromData = function(imgData, callback){
-  var img = new Image,
-    src = imgData;
+CanvasEditor.prototype.loadImageFromData = function(imgData, callback) {
+  var img = new Image();
+  var src = imgData;
 
   img.onload = function() {
     callback(null, img);
@@ -64,8 +64,8 @@ CanvasEditor.prototype.loadImageFromData = function(imgData, callback){
   img.src = src;
 };
 
-CanvasEditor.prototype.drawImage = function(canvas, img){
-  var ctx = canvas.getContext("2d");
+CanvasEditor.prototype.drawImage = function(canvas, img) {
+  var ctx = canvas.getContext('2d');
   canvas.width = img.width;
   canvas.height = img.height;
   ctx.drawImage( img, 0, 0 );
@@ -84,7 +84,7 @@ CanvasEditor.prototype.resetEditorCanvas = function() {
 
 CanvasEditor.prototype.applyEditorCanvasChanges = function() {
   this.drawCanvas(this.editorCanvas, this.sourceCanvas);
-  //save new image
+  // save new image
 };
 
 
@@ -92,15 +92,15 @@ CanvasEditor.prototype.resizeCanvas = function(canvas, width, height, callback) 
   var that = this;
   var canvasObject = this.currentMode === 'crop' ? this.trimCanvas(canvas) : canvas;
 
-  callback = callback || function(){};
+  callback = callback || function() {};
 
   if (width < 1) width = 1;
   if (height < 1) height = 1;
-  
+
   this.beforeRenderCallback();
   this.HERMITE.resample(canvasObject, width, height, true, function() {
     that.afterRenderCallback();
-    callback()
+    callback();
   });
 };
 
@@ -111,11 +111,11 @@ CanvasEditor.prototype.resizeEditorCanvas = function(width, height, callback) {
 
 CanvasEditor.prototype.rotateCanvas = function(canvas, degrees, callback) {
   var that = this;
-  callback = callback || function(){};
+  callback = callback || function() {};
   this.beforeRenderCallback();
 
-  setTimeout(function(){
-    that.loadImageFromData(canvas.toDataURL(), function(err, image){
+  setTimeout(function() {
+    that.loadImageFromData(canvas.toDataURL(), function(err, image) {
       var context = canvas.getContext('2d');
       canvas.width =  image.height;
       canvas.height = image.width;
@@ -128,21 +128,22 @@ CanvasEditor.prototype.rotateCanvas = function(canvas, degrees, callback) {
         case -90 :
           context.drawImage(image, -image.width, 0);
           break;
+        default:
+          break;
       }
       callback();
       that.afterRenderCallback();
     }, 100);
-  })
-
+  });
 };
 
 CanvasEditor.prototype.rotateEditorCanvas =  function(degrees, callback) {
   this.rotateCanvas(this.editorCanvas, degrees, callback);
 };
 
-CanvasEditor.prototype.cropCanvas = function (canvas, x, y, w, h, callback) {
+CanvasEditor.prototype.cropCanvas = function(canvas, x, y, w, h, callback) {
   var that = this;
-  callback = callback || function(){};
+  callback = callback || function() {};
   this.beforeRenderCallback();
   this.loadImageFromData(canvas.toDataURL(), function(err, image) {
     var context = canvas.getContext('2d');
@@ -154,62 +155,63 @@ CanvasEditor.prototype.cropCanvas = function (canvas, x, y, w, h, callback) {
   });
 };
 
-CanvasEditor.prototype.trimCanvas = function (canvas) {
-  var ctx = canvas.getContext('2d'),
-        copy = document.createElement('canvas').getContext('2d'),
-        pixels = ctx.getImageData(0, 0, canvas.width, canvas.height),
-        l = pixels.data.length,
-        i,
-        bound = {
-            top: null,
-            left: null,
-            right: null,
-            bottom: null
-        },
-        x, y;
-    
-    // Iterate over every pixel to find the highest
-    // and where it ends on every axis ()
-    for (i = 0; i < l; i += 4) {
-        if (pixels.data[i + 3] !== 0) {
-            x = (i / 4) % canvas.width;
-            y = Math.floor((i / 4) / canvas.width);
+CanvasEditor.prototype.trimCanvas = function(canvas) {
+  var ctx = canvas.getContext('2d');
+  var copy = document.createElement('canvas').getContext('2d');
+  var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var l = pixels.data.length;
+  var i;
+  var bound = {
+    top: null,
+    left: null,
+    right: null,
+    bottom: null
+  };
+  var x;
+  var y;
 
-            if (bound.top === null) {
-                bound.top = y;
-            }
+  // Iterate over every pixel to find the highest
+  // and where it ends on every axis ()
+  for (i = 0; i < l; i += 4) {
+    if (pixels.data[i + 3] !== 0) {
+      x = (i / 4) % canvas.width;
+      y = Math.floor((i / 4) / canvas.width);
 
-            if (bound.left === null) {
-                bound.left = x;
-            } else if (x < bound.left) {
-                bound.left = x;
-            }
+      if (bound.top === null) {
+        bound.top = y;
+      }
 
-            if (bound.right === null) {
-                bound.right = x;
-            } else if (bound.right < x) {
-                bound.right = x;
-            }
+      if (bound.left === null) {
+        bound.left = x;
+      } else if (x < bound.left) {
+        bound.left = x;
+      }
 
-            if (bound.bottom === null) {
-                bound.bottom = y;
-            } else if (bound.bottom < y) {
-                bound.bottom = y;
-            }
-        }
+      if (bound.right === null) {
+        bound.right = x;
+      } else if (bound.right < x) {
+        bound.right = x;
+      }
+
+      if (bound.bottom === null) {
+        bound.bottom = y;
+      } else if (bound.bottom < y) {
+        bound.bottom = y;
+      }
     }
-    
-    // Calculate the height and width of the content
-    var trimHeight = bound.bottom - bound.top,
-        trimWidth = bound.right - bound.left,
-        trimmed = ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+  }
 
-    copy.canvas.width = trimWidth;
-    copy.canvas.height = trimHeight;
-    copy.putImageData(trimmed, 0, 0);
+  // Calculate the height and width of the content
+  var trimHeight = bound.bottom - bound.top;
+  var trimWidth = bound.right - bound.left;
+  var trimmed = ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
 
-    // Return trimmed canvas
-    return copy.canvas;
+  copy.canvas.width = trimWidth;
+  copy.canvas.height = trimHeight;
+  copy.putImageData(trimmed, 0, 0);
+
+  // Return trimmed canvas
+  return copy.canvas;
 };
 
 CanvasEditor.prototype.cropEditorCanvas = function(x, y, w, h, callback) {
@@ -221,7 +223,7 @@ CanvasEditor.prototype.notInBorders = function(coords, mousePos) {
   if (!mousePos) {
     return false;
   }
-  
+
   var $container = $(this.editorCanvas).parent();
   var containerSize = {
     height: $container.innerHeight(),
@@ -234,7 +236,7 @@ CanvasEditor.prototype.notInBorders = function(coords, mousePos) {
     ||  (coords.y === 0 &&  mouseY < 0)
     ||  (coords.x2 === containerSize.width && mouseX > containerSize.width)
     ||  (mouseY > containerSize.height && coords.y2 === containerSize.height);
-}
+};
 
 CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
   var that = this;
@@ -251,7 +253,7 @@ CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
         that.editorCanvas.clientWidth - that.CROP_MASK_IDENTATION * 2,
         that.editorCanvas.clientHeight - that.CROP_MASK_IDENTATION * 2
       ],
-      onChange: function (coords) {
+      onChange: function(coords) {
         if (!that.isCoordsEquel(coords, that.lastCropCoordindates)) {
           updateCropCoords(coords, proportion);
           lastCropCoordindates = coords;
@@ -261,7 +263,7 @@ CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
           $(event.target).trigger('mouseup');
         }
       },
-      onRelease: function () {
+      onRelease: function() {
       }
     });
     updateCropCoords({
@@ -273,9 +275,9 @@ CanvasEditor.prototype.createCropMask = function(updateCropCoords) {
   });
 };
 
-CanvasEditor.prototype.isCoordsEquel = function(coords, coords2){
+CanvasEditor.prototype.isCoordsEquel = function(coords, coords2) {
   if (!coords || !coords2) return false;
-  return coords.x === coords2.x && coords.y === coords2.y && coords.w === coords2.w && coords.h === coords2.h
+  return coords.x === coords2.x && coords.y === coords2.y && coords.w === coords2.w && coords.h === coords2.h;
 };
 
 CanvasEditor.prototype.destroyCropMask = function(container) {
@@ -320,7 +322,6 @@ CanvasEditor.prototype.updateCropMask = function(x, y, w, h) {
 };
 
 CanvasEditor.prototype.resetCropMaskToDefault = function() {
-
   var jcropApi = $(this.editorCanvas).parent().data('Jcrop');
   jcropApi.setOptions({
     setSelect: [
