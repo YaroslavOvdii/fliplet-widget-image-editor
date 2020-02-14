@@ -45,6 +45,14 @@ html.provider-inline .image-widget-holder {
   background-color: transparent;
   padding: 10px;
   min-height: 230px;
+
+}
+
+/* Fix IE 11 vertical align according to the known issue https://github.com/philipwalton/flexbugs/issues/231 */
+#preview-image-editor:after{
+  content:'';
+  min-height:inherit;
+  font-size:0;
 }
 
 #preview-image-editor img {
@@ -146,6 +154,7 @@ html.provider-inline .image-widget-holder {
 .editCanvasWrapper {
   display: inline-block;
   font-size: 0;
+  width: 100%;
 }
 
 .editCanvasWrapper canvas {
